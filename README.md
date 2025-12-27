@@ -5,32 +5,32 @@
 ## Background
 
 This repo contains a demo of using [CocoIndex](https://cocoindex.io/), a data transformation framework
-the provides incremental processing and data lineage out-of-the-box, with [LanceDB](https://lancedb.com),
-a multimodal lakehouse for AI.
+for AI that provides incremental processing and data lineage out-of-the-box, with [LanceDB](https://lancedb.com),
+a modern lakehouse for multimodal AI.
 
 The goal is to store a multimodal dataset (images + text) in LanceDB and keep it fresh with CocoIndex.
 
 ### Why use LanceDB?
 
 One of the biggest benefits of using LanceDB over traditional databases or data lakes is this: Data
-that would otherwise be scattered in separate directories (for e.g., when using Parquet, tables
+that would otherwise be scattered in separate directories (e.g., when using Parquet, tables
 tend to store pointer URLs to images/videos/large binary blobs, not the actual data itself) --
 is *collocated* alongside the embeddings and metadata. This simplifies governance and distribution.
 
-Another key distinguishing factor when using LanceDB is the ability to evolve schema and data
+Another key distinguishing factor when using LanceDB is the ability to evolve the schema and data
 effortlessly -- Lance tables are "two-dimensional", meaning that they can grow both horizontally and
 vertically in essentially a zero-cost manner. Say you want to use an LLM to extract new features
 from one of the columns in a Lance table: you would run your pipeline, update the table schema to
 add a new column, and backfill it with the required values by running the transform.
 
 In traditional data lakes (e.g., based on Iceberg), this would require a full table rewrite, but in
-Lance, only the new data is being written (no table locks while write happen). This means that large
+Lance, only the new data is being written (no table locks while writes happen). This means that large
 teams working on multiple feature engineering tasks can simultaneously write new columns without
 affecting the layout on disk.
 
-There are several more benefits to LanceDB that leverage all the benefits of the
+There are several more advantages to using LanceDB that leverage all the benefits of the
 [Lance format](https://lance.org/), an open lakehouse format for multimodal AI, so we won't list
-them all here :).
+them all here.
 
 ### Why do incremental processing via CocoIndex?
 
@@ -39,7 +39,7 @@ user-facing application where users enter their recipes (along with images of th
 they prepared), and you want to persist the data to a multimodal storage engine.
 In this scenario, you typically don't begin with huge amounts of data. You accumulate
 data over time, as users add their creations. And the volume/velocity of the data aren't staggeringly
-high -- at times, there's ony a trickle of data coming in, but at other times, you may observe
+high -- at times, there's only a trickle of data coming in, but at other times, you may observe
 larger volumes coming in at a higher velocity than normal.
 
 For scenarios like this, incremental processing is an efficient technique that processes only new
@@ -49,15 +49,16 @@ analytics. CocoIndex is ideal for managing constantly evolving data sources, han
 of updates to keep data fresh with less overhead than full batch workloads.
 
 [CocoIndex](https://cocoindex.io/docs/) uses a declarative approach to
-defining indexing "flows", which involves source data and
+defining indexing "flows",involving source data and
 transformed data (either as an intermediate result or the final result to be put into targets).
-All data within the indexing flow has schema determined at flow definition time.
+All data within the indexing flow has a schema determined at flow definition time,
+which aligns very well with LanceDB's strictly typed schema-driven storage mechanism.
 
 ## Dataset
 
 We'll be using the [food ingredients and recipes](https://www.kaggle.com/datasets/pes12017000148/food-ingredients-and-recipe-dataset-with-images)
 dataset from Kaggle. The data contains 13k+ recipes and images of food/drinks scraped from the
-Epicurious website. The dataset is multimodal, containing images, arrays and text.
+Epicurious website. The dataset is multimodal, containing images, string arrays, and text.
 
 Download the dataset from Kaggle to the local directory (it will be in a file named `archive.zip`).
 Unzip the file at the root level of this repository.
@@ -83,7 +84,7 @@ uv run data_generator.py --start 0 --end 5
 ```
 
 This writes out the first 5 recipe records to a JSON file in the path `data/*.json`. Simultaneously,
-it also copies the image file into the `data/images/*.jpg` path.
+it copies the image file into the `data/images/*.jpg` path.
 
 To generate the data for the next 5 records, the corresponding start and end indices can be entered.
 
@@ -120,32 +121,33 @@ generation and understand the data lineage of the pipeline in a GUI. Start a loc
 cocoindex server -ci main
 ```
 
-Open the CocoInsight UI at https://cocoindex.io/cocoinsight. You can run also run queries in the CocoInsight UI
+Open the CocoInsight UI at https://cocoindex.io/cocoinsight. You can also run queries in the CocoInsight UI
 to test that the search functionality is working as intended.
 
 ### Managing updates
 
-CocoIndex will watch the source directory `data/` for any updates, and every time there is a change data capture
+CocoIndex will watch the source directory `data/` for any updates, and every time there is a change-data-capture (CDC)
 trigger in the source path (e.g., a new JSON file is added), this will trigger the CocoIndex server to run
 the flow, and update the data.
 
 ### Data compaction and why it's needed
 
-LanceDB uses Lance tables under the hood. Unlike Parquet (which uses row groups and partitions to store data on disk),]the Lance format uses _fragments_ and tracks data versions via a manifest. In incremental data processing pipelines such as those run
-in CocoIndex, a lot of smaller fragments can add up over time, which can impact query latency as the data grows in size.
-It's recommended to run compaction at periodic intervals (e.g., once every 7 days), or more frequently depending on the
-volume/velocity of commits to the storage layer in a given period of time.
+LanceDB uses Lance tables under the hood. Unlike Parquet (which uses row groups and partitions to store data on disk)
+the Lance format uses _fragments_ and tracks data versions via a manifest. In incremental data processing pipelines
+such as those run in CocoIndex, a lot of smaller fragments can add up over time, which can impact query latency as the
+data grows in size. It's recommended to run compaction at periodic intervals (e.g., once every 7 days), or more frequently depending on the volume/velocity of commits to the storage layer in a given period of time.
 
-The `optimize()` method handles compaction, pruning of 
+The `optimize()` method can be used to run compaction periodically.
 
 ```py
-# Open your lance table and run this command
+# Open your Lance table and run this command
 table.optimize()
 ```
-This performs the following:
+
+This command performs the following:
 - Compaction: Merges small files into larger ones
-- Prune: Removes old versions of the dataset
-- Index: Optimizes the indexes, adding new data to existing indexes
+- Pruning: Removes old versions of the dataset
+- Indexing: Optimizes the indexes, adding new data to existing indexes
 
 There is no need to compact tables too frequently, as this comes with computational overhead. LanceDB is highly
 performant up to millions of rows, so you can adjust the frequency of compaction gradually, based on the needs
@@ -153,12 +155,12 @@ of your workloads.
 
 ---
 
-## [Optional]: Running a pure LanceDB workflow
+## [Optional] Running a pure LanceDB workflow
 
 To contrast the CocoIndex "incremental way" with the traditional batch processing approach,
-we provide an additional script, `ingest.py` that contains code that ingests the recipe
+we provide an additional script, `ingest.py`, that contains code to ingest the recipe
 data into LanceDB. This step is optional (the aim of this repo is to show how to do it
-using CocoIndex using the defined above).
+using the CocoIndex flow defined above).
 
 The ingestion script also generates two kinds of embeddings:
 - Text embeddings on the `instructions` column (TODO: concatenate the `title` and `instructions` and embed _that_ instead)
