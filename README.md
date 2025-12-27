@@ -151,17 +151,6 @@ There is no need to compact tables too frequently, as this comes with computatio
 performant up to millions of rows, so you can adjust the frequency of compaction gradually, based on the needs
 of your workloads.
 
-## Inspect the database
-
-To inspect the table row count and list the indexes and schema of the tables
-in LanceDB, run the `inspect_db.py` script.
-
-```bash
-uv run inspect_db.py
-```
-
-This can be used to track the table evolution over time.
-
 ---
 
 ## [Optional]: Running a pure LanceDB workflow
@@ -204,3 +193,14 @@ Two kinds of queries are run:
 - Query via a text-to-image embedding on the `image_vector` column
 
 Each should return relevant `top-k` results based on the query.
+
+## Inspect the database
+
+To inspect the table row count and list the indexes and schema of the tables
+in LanceDB, run the `inspect_db.py` script.
+
+```bash
+uv run inspect_db.py
+```
+
+This can be used to track the table evolution over time.
