@@ -1,27 +1,24 @@
 import argparse
 import glob
 import io
+import os
 from pathlib import Path
 
 import lancedb
 import polars as pl
+import requests
 import torch
-from PIL import Image
 from lancedb.pydantic import LanceModel, Vector
-from transformers import (
-    AutoModel,
-    AutoTokenizer,
-    CLIPModel,
-    CLIPProcessor,
-    PreTrainedModel,
-    PreTrainedTokenizerBase,
-)
+from PIL import Image
+from transformers import CLIPModel, CLIPProcessor
 
 DATA_DIR = Path("data")
 IMAGES_DIR = DATA_DIR / "images"
 LANCEDB_URI = "./recipe_lancedb"
 TABLE_NAME = "recipes"
-TEXT_MODEL_NAME = "nomic-ai/nomic-embed-text-v1.5"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
+TEXT_MODEL_NAME = "nomic-embed-text"
+TEXT_EMBED_DIM = 768
 IMAGE_MODEL_NAME = "openai/clip-vit-base-patch32"
 
 
@@ -51,29 +48,22 @@ def load_image_bytes(image_name: str) -> bytes | None:
     return None
 
 
-def mean_pooling(model_output: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
-    token_embeddings = model_output
-    input_mask_expanded = (
-        attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+def embed_text(text: str) -> list[float]:
+    response = requests.post(
+        f"{OLLAMA_URL}/api/embeddings",
+        json={"model": TEXT_MODEL_NAME, "prompt": text},
+        timeout=30,
     )
-    sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, dim=1)
-    sum_mask = torch.clamp(input_mask_expanded.sum(dim=1), min=1e-9)
-    return sum_embeddings / sum_mask
-
-
-def embed_text(
-    text: str,
-    tokenizer: PreTrainedTokenizerBase,
-    model: PreTrainedModel,
-    device: torch.device,
-) -> list[float]:
-    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-    inputs = {k: v.to(device) for k, v in inputs.items()}
-    with torch.inference_mode():
-        output = model(**inputs)
-        embeddings = mean_pooling(output.last_hidden_state, inputs["attention_mask"])
-        embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
-    return embeddings[0].cpu().tolist()
+    response.raise_for_status()
+    payload = response.json()
+    embedding = payload.get("embedding")
+    if not isinstance(embedding, list):
+        raise ValueError("Expected Ollama embedding response to include a list under 'embedding'.")
+    if len(embedding) != TEXT_EMBED_DIM:
+        raise ValueError(
+            f"Expected embedding dimension {TEXT_EMBED_DIM}, got {len(embedding)}."
+        )
+    return embedding
 
 
 def embed_image(
@@ -91,33 +81,24 @@ def embed_image(
     return features[0].cpu().tolist()
 
 
-def load_models() -> tuple[
-    PreTrainedTokenizerBase, PreTrainedModel, CLIPProcessor, CLIPModel, torch.device
-]:
+def load_models() -> tuple[CLIPProcessor, CLIPModel, torch.device]:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    text_tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-        TEXT_MODEL_NAME
-    )
-    text_model = AutoModel.from_pretrained(TEXT_MODEL_NAME, trust_remote_code=True)
-    text_model.to(device)
-    text_model.eval()
-
     image_processor = CLIPProcessor.from_pretrained(IMAGE_MODEL_NAME)
     image_model = CLIPModel.from_pretrained(IMAGE_MODEL_NAME, trust_remote_code=True)
-    image_model.to(device)    # type: ignore
+    image_model.to(device)  # type: ignore[call-arg]
     image_model.eval()
 
-    return text_tokenizer, text_model, image_processor, image_model, device
+    return image_processor, image_model, device
 
 
 def main(overwrite: bool) -> None:
     """
     Upsert data into LanceDB from JSON files in the data directory.
     """
-    text_tokenizer, text_model, image_processor, image_model, device = load_models()
-    text_dim = text_model.config.hidden_size
+    image_processor, image_model, device = load_models()
+    text_dim = TEXT_EMBED_DIM
     image_dim = image_model.config.projection_dim
     recipe_schema = build_recipe_schema(text_dim, image_dim)
 
@@ -142,16 +123,13 @@ def main(overwrite: bool) -> None:
             instructions = item.get("instructions")
             if not isinstance(instructions, str):
                 instructions = ""
-            item["instructions_vector"] = embed_text(
-                instructions, text_tokenizer, text_model, device
-            )
+            item["instructions_vector"] = embed_text(instructions)
             if image_bytes is None:
                 item["image_vector"] = None
             else:
                 item["image_vector"] = embed_image(
                     image_bytes, image_processor, image_model, device
                 )
-        print(payload)
         # Upsert payload (insert or update if it exists)
         # https://docs.lancedb.com/tables/update
         (

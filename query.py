@@ -13,11 +13,8 @@ def search_instructions(
     table: lancedb.table.Table,
     text: str,
     limit: int,
-    tokenizer,
-    model,
-    device,
 ) -> None:
-    query_vector = embed_text(text, tokenizer, model, device)
+    query_vector = embed_text(text)
     results = (
         table.search(query_vector, vector_column_name="instructions_vector")
         .select(["id", "title", "ingredients", "image_name"])
@@ -53,7 +50,7 @@ def search_image_by_text(
 
 
 def main() -> None:
-    tokenizer, text_model, image_processor, image_model, device = load_models()
+    image_processor, image_model, device = load_models()
     db = lancedb.connect(LANCEDB_URI)
     table = db.open_table(TABLE_NAME)
 
@@ -61,9 +58,7 @@ def main() -> None:
 
     # Search instructions by text
     TEXT_QUERY = "vegetarian stew with onions and tomatoes"
-    search_instructions(
-        table, TEXT_QUERY, LIMIT, tokenizer, text_model, device
-    )
+    search_instructions(table, TEXT_QUERY, LIMIT)
 
     # Search images by text
     IMAGE_TEXT_QUERY = "meat and bread casserole"
@@ -75,6 +70,8 @@ def main() -> None:
         image_model,
         device,
     )
+
+    print(f"LanceDB table \"{table.name}\" has {table.count_rows()} rows.")
 
 
 if __name__ == "__main__":
