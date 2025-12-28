@@ -60,9 +60,7 @@ def embed_text(text: str) -> list[float]:
     if not isinstance(embedding, list):
         raise ValueError("Expected Ollama embedding response to include a list under 'embedding'.")
     if len(embedding) != TEXT_EMBED_DIM:
-        raise ValueError(
-            f"Expected embedding dimension {TEXT_EMBED_DIM}, got {len(embedding)}."
-        )
+        raise ValueError(f"Expected embedding dimension {TEXT_EMBED_DIM}, got {len(embedding)}.")
     return embedding
 
 

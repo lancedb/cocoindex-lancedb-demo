@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "cocoindex>=0.3.20",
+    "dspy>=3.0.4",
     "einops>=0.8.1",
     "lancedb>=0.26.0",
     "pillow>=12.0.0",

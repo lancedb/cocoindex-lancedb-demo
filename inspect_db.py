@@ -5,21 +5,9 @@ import lancedb
 LANCEDB_URI = "./recipe_lancedb"
 
 
-def list_table_names(db: lancedb.db.DBConnection) -> list[str]:
-    tables: list[str] = []
-    page_token: str | None = None
-    while True:
-        response = db.list_tables(page_token=page_token)
-        tables.extend(response.tables)
-        if not response.page_token:
-            break
-        page_token = response.page_token
-    return tables
-
-
 def list_indexes(db_uri: str) -> None:
     db = lancedb.connect(db_uri)
-    tables = list_table_names(db)
+    tables = db.list_tables().tables
     if not tables:
         print(f"No tables found in {db_uri}.")
         return
@@ -27,7 +15,7 @@ def list_indexes(db_uri: str) -> None:
     for table_name in tables:
         table = db.open_table(table_name)
         indexes = list(table.list_indices())
-        print(f"Table \"{table_name}\" has the following indexes:")
+        print(f'Table "{table_name}" has the following indexes:')
         if not indexes:
             print("  (no indexes)")
             continue
@@ -38,7 +26,7 @@ def list_indexes(db_uri: str) -> None:
 
 def run_inspection(db_uri: str) -> None:
     db = lancedb.connect(db_uri)
-    tables = list_table_names(db)
+    tables = db.list_tables().tables
 
     if not tables:
         print(f"No tables found in {db_uri}.")
@@ -46,8 +34,8 @@ def run_inspection(db_uri: str) -> None:
 
     for table_name in tables:
         table = db.open_table(table_name)
-        print(f"Table \"{table.name}\" has {table.count_rows()} rows\n---")
-        print(f"Schema for \"{table_name}\" table:")
+        print(f'Table "{table.name}" has {table.count_rows()} rows\n---')
+        print(f'Schema for "{table_name}" table:')
         print(table.schema, "\n---")
         list_indexes(db_uri)
 

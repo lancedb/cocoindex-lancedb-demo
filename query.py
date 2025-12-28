@@ -71,7 +71,7 @@ def main() -> None:
         device,
     )
 
-    print(f"LanceDB table \"{table.name}\" has {table.count_rows()} rows.")
+    print(f'LanceDB table "{table.name}" has {table.count_rows()} rows.')
 
 
 if __name__ == "__main__":
