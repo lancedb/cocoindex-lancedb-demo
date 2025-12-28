@@ -171,9 +171,7 @@ async def extract_features_batch(
         if not item.ingredients:
             continue
         pending_idx.append(idx)
-        pending.append(
-            asyncio.create_task(extractor.aforward(recipe_ingredients=item.ingredients))
-        )
+        pending.append(asyncio.create_task(extractor.aforward(recipe_ingredients=item.ingredients)))
 
     predictions: list[Prediction | None] = [None] * len(inputs)
     if pending:

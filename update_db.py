@@ -32,7 +32,7 @@ def add_new_column(db: lancedb.db.DBConnection) -> None:
 
     existing = set(table.schema.names)
     fields_to_add = [field for field in fields if field.name not in existing]
-    if not fields_to_add:   
+    if not fields_to_add:
         print(f'No new columns to add to "{table_name}".')
 
     # Add new typed columns initialized with nulls.
