@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import functools
 import io
@@ -10,12 +9,9 @@ import cocoindex
 import cocoindex.targets.lancedb as coco_lancedb
 import torch
 from dotenv import load_dotenv
-from dspy import Prediction
 from PIL import Image
 from pydantic import BaseModel
 from transformers import CLIPModel, CLIPProcessor
-
-from add_features import Extract
 
 load_dotenv()
 
@@ -28,7 +24,6 @@ OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 TEXT_MODEL_NAME = "nomic-embed-text"
 TEXT_EMBED_DIM = 768
 IMAGE_MODEL_NAME = "openai/clip-vit-base-patch32"
-FEATURE_BATCH_SIZE = 10
 
 
 class RecipeInput(BaseModel):
@@ -38,20 +33,6 @@ class RecipeInput(BaseModel):
     instructions: str | None = None
     image_name: str | None = None
     image_path: str | None = None
-
-
-class RecipeFeatureInput(BaseModel):
-    id: int
-    ingredients: list[str] | None = None
-
-
-class RecipeFeatureOutput(BaseModel):
-    id: int
-    is_vegetarian: bool | None = None
-    has_nuts: bool | None = None
-    has_dairy: bool | None = None
-    has_eggs: bool | None = None
-    category: str | None = None
 
 
 @functools.cache
@@ -64,9 +45,7 @@ def load_clip_model() -> tuple[CLIPModel, CLIPProcessor, torch.device]:
     model.eval()
     return model, processor, device
 
-
 # --- Transform flows are transforms that are common to both indexing and querying in CocoIndex---
-
 
 @cocoindex.transform_flow()
 def text_to_embedding(
@@ -81,9 +60,7 @@ def text_to_embedding(
         )
     )
 
-
 # --- CocoIndex custom functions used in flow definitions ---
-
 
 @cocoindex.op.function()
 def coerce_recipes(payload: cocoindex.Json) -> list[RecipeInput]:
@@ -154,51 +131,7 @@ def image_embedding_clip(
         features[0].cpu().tolist(),
     )
 
-
-@cocoindex.op.function()
-def build_feature_input(recipe_id: int, ingredients: list[str] | None) -> RecipeFeatureInput:
-    return RecipeFeatureInput(id=recipe_id, ingredients=ingredients)
-
-
-@cocoindex.op.function(batching=True, max_batch_size=FEATURE_BATCH_SIZE)
-async def extract_features_batch(
-    inputs: list[RecipeFeatureInput],
-) -> list[RecipeFeatureOutput]:
-    extractor = Extract()
-    pending: list[asyncio.Task[Prediction]] = []
-    pending_idx: list[int] = []
-    for idx, item in enumerate(inputs):
-        if not item.ingredients:
-            continue
-        pending_idx.append(idx)
-        pending.append(asyncio.create_task(extractor.aforward(recipe_ingredients=item.ingredients)))
-
-    predictions: list[Prediction | None] = [None] * len(inputs)
-    if pending:
-        results = await asyncio.gather(*pending)
-        for idx, pred in zip(pending_idx, results):
-            predictions[idx] = pred
-
-    features: list[RecipeFeatureOutput] = []
-    for item, pred in zip(inputs, predictions):
-        if pred is None:
-            features.append(RecipeFeatureOutput(id=item.id))
-            continue
-        features.append(
-            RecipeFeatureOutput(
-                id=item.id,
-                is_vegetarian=pred.get("is_vegetarian"),
-                has_nuts=pred.get("has_nuts"),
-                has_dairy=pred.get("has_dairy"),
-                has_eggs=pred.get("has_eggs"),
-                category=pred.get("category"),
-            )
-        )
-    return features
-
-
 # --- CocoIndex flow definition ---
-
 
 @cocoindex.flow_def(name="RecipeIngest")
 def recipe_ingest_flow(
@@ -232,10 +165,6 @@ def recipe_ingest_flow(
             )
             recipe["instructions_vector"] = text_to_embedding(recipe["text_for_embedding"])
             recipe["image_vector"] = recipe["image"].transform(image_embedding_clip)
-            feature_input = recipe["id"].transform(
-                build_feature_input, ingredients=recipe["ingredients"]
-            )
-            recipe["features"] = feature_input.transform(extract_features_batch)
 
             recipe_embeddings.collect(
                 id=recipe["id"],
@@ -247,11 +176,6 @@ def recipe_ingest_flow(
                 image=recipe["image"],
                 instructions_vector=recipe["instructions_vector"],
                 image_vector=recipe["image_vector"],
-                is_vegetarian=recipe["features"]["is_vegetarian"],
-                has_nuts=recipe["features"]["has_nuts"],
-                has_dairy=recipe["features"]["has_dairy"],
-                has_eggs=recipe["features"]["has_eggs"],
-                category=recipe["features"]["category"],
             )
 
     recipe_embeddings.export(
@@ -262,7 +186,6 @@ def recipe_ingest_flow(
 
 
 # --- CocoIndex query handler (optional used for running test queries downstream of the flow) ---
-
 
 @recipe_ingest_flow.query_handler(
     result_fields=cocoindex.QueryHandlerResultFields(
@@ -287,11 +210,6 @@ async def search(query: str) -> cocoindex.QueryOutput:
                 "instructions": result["instructions"],
                 "image_name": result["image_name"],
                 "image_path": result["image_path"],
-                "is_vegetarian": result.get("is_vegetarian"),
-                "has_nuts": result.get("has_nuts"),
-                "has_dairy": result.get("has_dairy"),
-                "has_eggs": result.get("has_eggs"),
-                "category": result.get("category"),
                 "score": result["_distance"],
             }
             for result in search_results
