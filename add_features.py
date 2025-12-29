@@ -18,7 +18,7 @@ lm = dspy.LM(
 dspy.configure(lm=lm)
 
 
-class RecipeInput(BaseModel):
+class RecipeFeatureInput(BaseModel):
     id: int
     ingredients: list[str] | None = None
 
@@ -32,7 +32,7 @@ class FeatureExtractor(dspy.Signature):
     """
 
     id: int = dspy.InputField()
-    recipe_ingredients: list[str] = dspy.InputField()
+    ingredients: list[str] = dspy.InputField()
     is_vegetarian: bool = dspy.OutputField()
     has_nuts: bool = dspy.OutputField()
     has_dairy: bool = dspy.OutputField()
@@ -44,16 +44,16 @@ class Extract(dspy.Module):
     def __init__(self):
         self.extractor = dspy.Predict(FeatureExtractor)
 
-    def forward(self, recipe: RecipeInput):
-        return self.extractor(id=recipe.id, recipe_ingredients=recipe.ingredients)
+    def forward(self, recipe: RecipeFeatureInput):
+        return self.extractor(id=recipe.id, ingredients=recipe.ingredients)
 
-    async def aforward(self, recipe: RecipeInput):
-        return await self.extractor.aforward(id=recipe.id, recipe_ingredients=recipe.ingredients)
+    async def aforward(self, recipe: RecipeFeatureInput):
+        return await self.extractor.acall(id=recipe.id, ingredients=recipe.ingredients)
 
 
 if __name__ == "__main__":
     tests = [
-        RecipeInput(
+        RecipeFeatureInput(
             id=1,
             ingredients=[
                 "2 cups of flour",
@@ -63,7 +63,7 @@ if __name__ == "__main__":
                 "2 eggs",
             ],
         ),
-        RecipeInput(
+        RecipeFeatureInput(
             id=2,
             ingredients=[
                 "3 oz. Grand Marnier",

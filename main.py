@@ -165,17 +165,15 @@ async def extract_features_batch(
     inputs: list[RecipeFeatureInput],
 ) -> list[RecipeFeatureOutput]:
     extractor = Extract()
-    pending: list[asyncio.Task[Prediction]] = []
+    tasks: list[asyncio.Task[Prediction]] = []
     pending_idx: list[int] = []
-    for idx, item in enumerate(inputs):
-        if not item.ingredients:
-            continue
+    for idx, recipe in enumerate(inputs):
         pending_idx.append(idx)
-        pending.append(asyncio.create_task(extractor.aforward(recipe_ingredients=item.ingredients)))
+        tasks.append(asyncio.create_task(extractor.aforward(recipe=recipe)))
 
     predictions: list[Prediction | None] = [None] * len(inputs)
-    if pending:
-        results = await asyncio.gather(*pending)
+    if tasks:
+        results = await asyncio.gather(*tasks)
         for idx, pred in zip(pending_idx, results):
             predictions[idx] = pred
 
