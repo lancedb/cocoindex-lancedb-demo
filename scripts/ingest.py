@@ -12,11 +12,11 @@ from lancedb.pydantic import LanceModel, Vector
 from PIL import Image
 from transformers import CLIPModel, CLIPProcessor
 
-DATA_DIR = Path("data")
+DATA_DIR = Path("../data")
 IMAGES_DIR = DATA_DIR / "images"
-LANCEDB_URI = "./recipe_lancedb"
+LANCEDB_URI = "../recipe_lancedb"
 TABLE_NAME = "recipes"
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 TEXT_MODEL_NAME = "nomic-embed-text"
 TEXT_EMBED_DIM = 768
 IMAGE_MODEL_NAME = "openai/clip-vit-base-patch32"
