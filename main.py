@@ -8,14 +8,13 @@ from typing import Literal, cast
 
 import cocoindex
 import cocoindex.targets.lancedb as coco_lancedb
+import dspy
 import torch
 from dotenv import load_dotenv
 from dspy import Prediction
 from PIL import Image
 from pydantic import BaseModel
 from transformers import CLIPModel, CLIPProcessor
-
-from add_features import Extract
 
 load_dotenv()
 
@@ -24,11 +23,20 @@ DATA_DIR = Path("data")
 IMAGES_DIR = DATA_DIR / "images"
 LANCEDB_URI = "./recipe_lancedb"
 TABLE_NAME = "recipes"
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 TEXT_MODEL_NAME = "nomic-embed-text"
 TEXT_EMBED_DIM = 768
 IMAGE_MODEL_NAME = "openai/clip-vit-base-patch32"
 FEATURE_BATCH_SIZE = 10
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+
+# Using OpenRouter. Switch to another LLM provider as needed
+lm = dspy.LM(
+    model="openrouter/google/gemini-2.0-flash-001",
+    api_base="https://openrouter.ai/api/v1",
+    api_key=OPENROUTER_API_KEY,
+)
+dspy.configure(lm=lm)
 
 
 class RecipeInput(BaseModel):
@@ -64,6 +72,37 @@ def load_clip_model() -> tuple[CLIPModel, CLIPProcessor, torch.device]:
     model.eval()
     return model, processor, device
 
+# --- Feature extraction using DSPy ---
+
+class FeatureExtractor(dspy.Signature):
+    """
+    Given a recipe's list of ingredients, extract the requires features.
+    - Treat eggs as vegetarian, and fish as non-vegetarian
+    - Nuts include any kind of tree nuts, peanuts and ground nuts
+    - Dairy includes milk, cheese, butter, yogurt, or other products made from animal milk
+    """
+
+    id: int = dspy.InputField()
+    ingredients: list[str] = dspy.InputField()
+    is_vegetarian: bool = dspy.OutputField()
+    has_nuts: bool = dspy.OutputField()
+    has_dairy: bool = dspy.OutputField()
+    has_eggs: bool = dspy.OutputField()
+    category: Literal["food", "beverage"] = dspy.OutputField()
+
+
+class Extract(dspy.Module):
+    """
+    DSPy module to extract recipe features using the FeatureExtractor signature.
+    """
+    def __init__(self):
+        self.extractor = dspy.Predict(FeatureExtractor)
+
+    def forward(self, recipe: RecipeFeatureInput):
+        return self.extractor(id=recipe.id, ingredients=recipe.ingredients)
+
+    async def aforward(self, recipe: RecipeFeatureInput):
+        return await self.extractor.acall(id=recipe.id, ingredients=recipe.ingredients)
 
 # --- Transform flows are transforms that are common to both indexing and querying in CocoIndex---
 
@@ -257,7 +296,6 @@ def recipe_ingest_flow(
         coco_lancedb.LanceDB(db_uri=LANCEDB_URI, table_name=TABLE_NAME),
         primary_key_fields=["id"],
     )
-
 
 # --- CocoIndex query handler (optional used for running test queries downstream of the flow) ---
 

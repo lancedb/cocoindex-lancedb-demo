@@ -6,7 +6,7 @@ import lancedb
 import pyarrow as pa
 
 # Path to existing database
-LANCEDB_URI = "./recipe_lancedb"
+LANCEDB_URI = "../recipe_lancedb"
 
 
 def drop_existing_columns(table: lancedb.table.Table) -> None:

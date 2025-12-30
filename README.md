@@ -109,6 +109,8 @@ target. It's simple to get it running via Docker as follows:
 docker compose -f <(curl -L https://raw.githubusercontent.com/cocoindex-io/cocoindex/refs/heads/main/dev/postgres.yaml) up
 ```
 
+### One-time flow
+
 To run a one-time update in CocoIndex, use the following command:
 ```
 cocoindex update main
@@ -124,11 +126,13 @@ cocoindex server -ci main
 Open the CocoInsight UI at https://cocoindex.io/cocoinsight. You can also run queries in the CocoInsight UI
 to test that the search functionality is working as intended.
 
-### Managing updates
+### Live updates
 
-CocoIndex will watch the source directory `data/` for any updates, and every time there is a change-data-capture (CDC)
-trigger in the source path (e.g., a new JSON file is added), this will trigger the CocoIndex server to run
-the flow, and update the data.
+To run a CocoIndex server that watches for changes to the source or target and automatically
+run updates when there is a change, use the following command:
+```
+cocoindex update main -L
+```
 
 ### Data compaction and why it's needed
 
@@ -155,10 +159,11 @@ of your workloads.
 
 ---
 
-## [Optional] Running a pure LanceDB workflow
+## [Optional] Running a pure LanceDB pipeline
 
 To contrast the CocoIndex "incremental way" with the traditional batch processing approach,
-we provide an additional script, `ingest.py`, that contains code to ingest the recipe
+we provide sample scripts in the `scripts/` directory. 
+`ingest.py` contains code to ingest the recipe
 data into LanceDB. This step is optional (the aim of this repo is to show how to do it
 using the CocoIndex flow defined above).
 
@@ -172,6 +177,7 @@ the `openai/clip-vit-base-patch32` model, from Hugging Face.
 Run the script as follows:
 
 ```bash
+cd scripts
 # Overwrite the existing database
 uv run ingest.py -o
 # Or, append to an existing database (default mode)
@@ -198,11 +204,9 @@ Each should return relevant `top-k` results based on the query.
 
 ## Inspect the database
 
-To inspect the table row count and list the indexes and schema of the tables
-in LanceDB, run the `inspect_db.py` script.
+To display the schema of the table, display its row count and list its indexes,
+run the `inspect_db.py` script.
 
 ```bash
 uv run inspect_db.py
 ```
-
-This can be used to track the table evolution over time.

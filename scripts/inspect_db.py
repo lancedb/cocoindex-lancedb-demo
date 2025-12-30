@@ -2,7 +2,7 @@ import argparse
 
 import lancedb
 
-LANCEDB_URI = "./recipe_lancedb"
+LANCEDB_URI = "../recipe_lancedb"
 
 
 def list_indexes(db_uri: str) -> None:

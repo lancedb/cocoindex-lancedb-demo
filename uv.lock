@@ -242,7 +242,7 @@ wheels = [
 
 [[package]]
 name = "cocoindex"
-version = "0.3.20"
+version = "0.3.22"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -253,13 +253,13 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "watchfiles" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/af/9c/97719c7f624b7f6629bd084a2122e8d419485089a648b0273e84d419e716/cocoindex-0.3.20.tar.gz", hash = "sha256:f3c966bcf4f4005ce9f8d0dd9bffc4b545487e10adde1e2c09829eaea04f15f6", size = 379812, upload-time = "2025-12-22T19:03:30.287Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3d/1c/9fe8481691bddebe616d4c79559a4cbfd2b406bc94fabee9cc41bf1b88f9/cocoindex-0.3.22.tar.gz", hash = "sha256:b44ea76808a596bbe709d85d8d0e5e6b59968f91fcfb7e6b260ebc383fe9ab11", size = 383300, upload-time = "2025-12-27T00:54:33.255Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/61/6b/a769e5211858c6bb01c42fa069d7e104c362e7aed3e4c735edec5d54964c/cocoindex-0.3.20-cp311-abi3-macosx_10_12_x86_64.whl", hash = "sha256:93a76f585fcce8cb8ef90158297fdc13a1f2d0bf01a0b1605effd8fabe35dfa8", size = 17949732, upload-time = "2025-12-22T19:03:28.196Z" },
-    { url = "https://files.pythonhosted.org/packages/8c/02/94dbdc1c79ed752987d62fde22913b60d75cd3805cef451b8f398702fd75/cocoindex-0.3.20-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:add339892387c32e75a4e5e3353a32379c7028b01fb6be2bab99ad9be387c498", size = 17307761, upload-time = "2025-12-22T19:03:25.861Z" },
-    { url = "https://files.pythonhosted.org/packages/81/54/564359154acb05c194f72b3ae80f78a6415f21236276b3d945927250a092/cocoindex-0.3.20-cp311-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:26fb87c44d3a00fe065f71341185483217d3af5f36b481d774ccb65dbe982cc6", size = 17795577, upload-time = "2025-12-22T19:03:20.644Z" },
-    { url = "https://files.pythonhosted.org/packages/ff/95/380a72c9dd292249498cd89677704e900d18a944d79d58221a0ccab87b04/cocoindex-0.3.20-cp311-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:12e0a5824667654004d5f440c1bfaf86d18ecda6c34f1518694d40f6520099bf", size = 18417470, upload-time = "2025-12-22T19:03:23.457Z" },
-    { url = "https://files.pythonhosted.org/packages/65/1a/ce706ef8e138fe308b34988dbbd763410a7aa3c52b6b8ba1126e9f5daa11/cocoindex-0.3.20-cp311-abi3-win_amd64.whl", hash = "sha256:fe110a50a8136e5d27c5cdae84272cd9cf89d8666c946b5ac112e905eff64d24", size = 18982509, upload-time = "2025-12-22T19:03:31.951Z" },
+    { url = "https://files.pythonhosted.org/packages/86/9b/ccd8d6653c9c0c9eac8bf16fd6b41f359b303be84ad09c7fe90474a05733/cocoindex-0.3.22-cp311-abi3-macosx_10_12_x86_64.whl", hash = "sha256:7488f4f42c7341b0713fe0ed8ad39b12e54742b7bf985ea748814d57bc860b90", size = 18038513, upload-time = "2025-12-27T00:54:31.184Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/65/5fac1f85823b1c42bbad9a24f7dcb27069336c30ee35f19e712bd624b06d/cocoindex-0.3.22-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:96bc72e54bf9443d4d851a94632effa8f4ce72b576e7458e17e951578493e165", size = 17370061, upload-time = "2025-12-27T00:54:28.781Z" },
+    { url = "https://files.pythonhosted.org/packages/54/5c/8f310f3039b23ad943ed06793bc35b8363554778d0db13e0c9521548ff0a/cocoindex-0.3.22-cp311-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:065b93bddca03f2bc91e9e99de828737c6e53b1090d1a46039dc96ce1ad012f2", size = 17854728, upload-time = "2025-12-27T00:54:23.582Z" },
+    { url = "https://files.pythonhosted.org/packages/b6/6d/cb44176c86b1842bc44755c9bf5a43420291a533b0dbe98c13850f5db70b/cocoindex-0.3.22-cp311-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:49910292bcf14ed8e4af01c2431f0e0606d20f0532571e17fbce4f607f9eb323", size = 18498030, upload-time = "2025-12-27T00:54:26.27Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/3f/4d88666f8517bbf11dcc9fdd7cde29875afa4a2c8e698b4c67079ca792ab/cocoindex-0.3.22-cp311-abi3-win_amd64.whl", hash = "sha256:adbe85a7f4324452010b881ab08c330433d06e66e34cfa7e02b9aaabb9540449", size = 19054759, upload-time = "2025-12-27T00:54:34.655Z" },
 ]
 
 [[package]]
@@ -281,7 +281,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cocoindex", specifier = ">=0.3.20" },
+    { name = "cocoindex", specifier = ">=0.3.22" },
     { name = "dspy", specifier = ">=3.0.4" },
     { name = "einops", specifier = ">=0.8.1" },
     { name = "lancedb", specifier = ">=0.26.0" },
