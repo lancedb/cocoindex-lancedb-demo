@@ -49,10 +49,11 @@ export default function App() {
         <div>
           <div className="brand">
             <img className="logo" src="/cocoindex-favicon.png" alt="CocoIndex logo" />
-            <h1 className="title">CocoIndex + LanceDB Search</h1>
+            <img className="logo" src="/lancedb-favicon.png" alt="LanceDB logo" />
+            <h1 className="title">Keeping Your Data Fresh with CocoIndex and LanceDB</h1>
           </div>
           <p className="subtitle">
-            Search for recipes using natural language via text or image embeddings.
+            Search for interesting recipes using natural language via text or image embeddings.
           </p>
         </div>
       </header>
