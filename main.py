@@ -72,7 +72,9 @@ def load_clip_model() -> tuple[CLIPModel, CLIPProcessor, torch.device]:
     model.eval()
     return model, processor, device
 
+
 # --- Feature extraction using DSPy ---
+
 
 class FeatureExtractor(dspy.Signature):
     """
@@ -95,6 +97,7 @@ class Extract(dspy.Module):
     """
     DSPy module to extract recipe features using the FeatureExtractor signature.
     """
+
     def __init__(self):
         self.extractor = dspy.Predict(FeatureExtractor)
 
@@ -103,6 +106,7 @@ class Extract(dspy.Module):
 
     async def aforward(self, recipe: RecipeFeatureInput):
         return await self.extractor.acall(id=recipe.id, ingredients=recipe.ingredients)
+
 
 # --- Transform flows are transforms that are common to both indexing and querying in CocoIndex---
 
@@ -296,6 +300,7 @@ def recipe_ingest_flow(
         coco_lancedb.LanceDB(db_uri=LANCEDB_URI, table_name=TABLE_NAME),
         primary_key_fields=["id"],
     )
+
 
 # --- CocoIndex query handler (optional used for running test queries downstream of the flow) ---
 

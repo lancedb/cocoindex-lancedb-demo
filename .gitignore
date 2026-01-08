@@ -212,3 +212,6 @@ __marimo__/
 data/
 archive/
 recipe_lancedb/
+node_modules/
+frontend/node_modules/
+frontend/dist/

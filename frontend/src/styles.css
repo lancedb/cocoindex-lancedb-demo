@@ -1,0 +1,254 @@
+:root {
+  font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #0f172a;
+  background: linear-gradient(135deg, #ffe8da 0%, #fff5ed 40%, #ffffff 100%);
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #ffd9c4;
+  background: #fff6f0;
+  padding: 2px;
+  box-shadow: 0 6px 16px rgba(215, 107, 61, 0.15);
+}
+
+.title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #d76b3d;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: #5f4436;
+  max-width: 720px;
+  line-height: 1.5;
+}
+
+.panel {
+  background: #ffffffcc;
+  border: 1px solid #ffd9c4;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 20px 60px rgba(215, 107, 61, 0.12);
+}
+
+.form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.input-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.query-input {
+  flex: 1 1 320px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  font-size: 16px;
+  background: #fff;
+}
+
+.query-input:focus {
+  outline: 2px solid #e98a57;
+  border-color: #e98a57;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #7c3aed;
+}
+
+.button {
+  background: linear-gradient(120deg, #f9895a, #f57245);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.button:disabled {
+  background: #f4b896;
+  cursor: not-allowed;
+}
+
+.button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(249, 137, 90, 0.3);
+}
+
+.status {
+  font-size: 14px;
+  color: #5f4436;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #ffd9c4;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  box-shadow: 0 16px 36px rgba(215, 107, 61, 0.08);
+}
+
+.thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #f1f5f9;
+}
+
+.card-body {
+  padding: 12px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #475569;
+}
+
+.pill {
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: #ffe9dd;
+  color: #b45124;
+  border: 1px solid #f9c7a7;
+}
+
+.ingredients {
+  font-size: 13px;
+  color: #475569;
+  margin: 0;
+}
+
+.empty {
+  text-align: center;
+  color: #5f4436;
+  padding: 32px 12px;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid #ffd9c4;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff6f0;
+}
+
+.segment {
+  border: none;
+  background: transparent;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: #b45124;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.segment.active {
+  background: #fce0cf;
+  color: #8c3915;
+}
+
+.segment:not(.active):hover {
+  background: #fff0e7;
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 26px;
+  }
+
+  .hero {
+    flex-direction: column;
+  }
+}

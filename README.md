@@ -8,7 +8,7 @@ This repo contains a demo of using [CocoIndex](https://cocoindex.io/), a data tr
 for AI that provides incremental processing and data lineage out-of-the-box, with [LanceDB](https://lancedb.com),
 a modern lakehouse for multimodal AI.
 
-The goal is to store a multimodal dataset (images + text) in LanceDB and keep it fresh with CocoIndex.
+The goal is to store a multimodal dataset of recipe data (images + text) in LanceDB and keep it fresh with CocoIndex.
 
 ### Why use LanceDB?
 
@@ -198,8 +198,48 @@ An upsert pipeline is used during ingestion, so that duplicate data isn't writte
 This means that as the script is run multiple times (as new data comes in), only records that have
 a new unique `id` field for the recipe are written to the table.
 
+## Search web app (FastAPI + React)
+
+Use the provided FastAPI app (`app.py`) and Vite frontend (`frontend/`) to run text->image or text->text searches against the LanceDB store. The UI offers buttons to switch between text search (nomic-embed-text via Ollama) and image search (CLIP text encoder against stored image embeddings). Images are served directly from `/img` backed by `data/images`.
+
+### Environment
+Copy `.env.example` to `.env` and adjust as needed. Defaults assume:
+- CocoIndex (flow/updater) runs outside docker-compose; use your preferred command (e.g., `cocoindex update main -L` with the Postgres helper you already run).
+- LanceDB path `/app/recipe_lancedb` and table `recipes` (mounted from the repo).
+- Ollama reachable at `http://host.docker.internal:11434` (set `OLLAMA_HOST` if different).
+
+### Run locally
+1. Ensure data and embeddings exist (e.g., `uv run data_generator.py --start 0 --end 10` and `cocoindex update main -L` in a separate shell).
+2. Start the API:
+   ```bash
+   uv run uvicorn app:app --reload --host 0.0.0.0 --port 8000
+   ```
+3. Start the frontend:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev -- --host 0.0.0.0 --port 4173
+   ```
+4. Open http://localhost:4173 and try queries like "yellow soup" or "latte art". Use the mode buttons to toggle between text and image search.
+
+### Run with Docker Compose
+The compose file brings up only the FastAPI backend and Vite frontend. Run CocoIndex separately (e.g., with your existing Postgres helper compose).
+```bash
+docker compose up --build
+```
+Services:
+- Backend API at http://localhost:8000
+- Frontend at http://localhost:4173 (calls the backend service)
+
+Data and LanceDB files are mounted from `./data` and `./recipe_lancedb` so you can reuse local artifacts between runs.
+
+If you already have the CocoIndex Postgres helper running (e.g., via
+`docker compose -f <(curl -L https://raw.githubusercontent.com/cocoindex-io/cocoindex/refs/heads/main/dev/postgres.yaml) up`),
+keep running it separately; the backend/frontend compose here does not manage CocoIndex.
+
 ## Querying the database
 
+You can also query the database manually in LanceDB.
 The `query.py` script contains sample code to query the data once it's persisted to LanceDB.
 
 ```bash

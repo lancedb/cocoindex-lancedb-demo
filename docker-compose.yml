@@ -1,0 +1,35 @@
+x-backend-build: &backend-build
+  build:
+    context: .
+    dockerfile: Dockerfile.api
+
+services:
+  backend:
+    <<: *backend-build
+    command: ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+    env_file:
+      - .env
+    environment:
+      LANCEDB_URI: /app/recipe_lancedb
+      TABLE_NAME: recipes
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./recipe_lancedb:/app/recipe_lancedb
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    environment:
+      - VITE_API_BASE_URL=http://backend:8000
+    depends_on:
+      - backend
+    ports:
+      - "4173:4173"
+    restart: unless-stopped
