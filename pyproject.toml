@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "cocoindex>=0.3.22",
+    "cocoindex>=0.3.25",
     "dspy>=3.0.4",
     "einops>=0.8.1",
     "fastapi>=0.128.0",

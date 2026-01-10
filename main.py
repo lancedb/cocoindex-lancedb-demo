@@ -26,7 +26,6 @@ TABLE_NAME = "recipes"
 TEXT_MODEL_NAME = "nomic-embed-text"
 TEXT_EMBED_DIM = 768
 IMAGE_MODEL_NAME = "openai/clip-vit-base-patch32"
-FEATURE_BATCH_SIZE = 10
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
@@ -203,39 +202,21 @@ def build_feature_input(recipe_id: int, ingredients: list[str] | None) -> Recipe
     return RecipeFeatureInput(id=recipe_id, ingredients=ingredients)
 
 
-@cocoindex.op.function(batching=True, max_batch_size=FEATURE_BATCH_SIZE)
-async def extract_features_batch(
-    inputs: list[RecipeFeatureInput],
-) -> list[RecipeFeatureOutput]:
+@cocoindex.op.function()
+async def extract_features(recipe: RecipeFeatureInput) -> RecipeFeatureOutput:
     extractor = Extract()
-    tasks: list[asyncio.Task[Prediction]] = []
-    pending_idx: list[int] = []
-    for idx, recipe in enumerate(inputs):
-        pending_idx.append(idx)
-        tasks.append(asyncio.create_task(extractor.aforward(recipe=recipe)))
+    prediction = await extractor.aforward(recipe=recipe)
+    if prediction is None:
+        return RecipeFeatureOutput(id=recipe.id)
 
-    predictions: list[Prediction | None] = [None] * len(inputs)
-    if tasks:
-        results = await asyncio.gather(*tasks)
-        for idx, pred in zip(pending_idx, results):
-            predictions[idx] = pred
-
-    features: list[RecipeFeatureOutput] = []
-    for item, pred in zip(inputs, predictions):
-        if pred is None:
-            features.append(RecipeFeatureOutput(id=item.id))
-            continue
-        features.append(
-            RecipeFeatureOutput(
-                id=item.id,
-                is_vegetarian=pred.get("is_vegetarian"),
-                has_nuts=pred.get("has_nuts"),
-                has_dairy=pred.get("has_dairy"),
-                has_eggs=pred.get("has_eggs"),
-                category=pred.get("category"),
-            )
-        )
-    return features
+    return RecipeFeatureOutput(
+        id=recipe.id,
+        is_vegetarian=prediction.get("is_vegetarian"),
+        has_nuts=prediction.get("has_nuts"),
+        has_dairy=prediction.get("has_dairy"),
+        has_eggs=prediction.get("has_eggs"),
+        category=prediction.get("category"),
+    )
 
 
 # --- CocoIndex flow definition ---
@@ -276,7 +257,7 @@ def recipe_ingest_flow(
             feature_input = recipe["id"].transform(
                 build_feature_input, ingredients=recipe["ingredients"]
             )
-            recipe["features"] = feature_input.transform(extract_features_batch)
+            recipe["features"] = feature_input.transform(extract_features)
 
             recipe_embeddings.collect(
                 id=recipe["id"],
