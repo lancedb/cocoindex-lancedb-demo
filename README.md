@@ -34,25 +34,14 @@ them all here.
 
 ### Why do incremental processing via CocoIndex?
 
-Not all vector processing workloads are offline batch workloads. Consider this scenario: you have a
-user-facing application where users enter their recipes (along with images of the food/drink item that
-they prepared), and you want to persist the data to a multimodal storage engine.
-In this scenario, you typically don't begin with huge amounts of data. You accumulate
-data over time, as users add their creations. And the volume/velocity of the data aren't staggeringly
-high -- at times, there's only a trickle of data coming in, but at other times, you may observe
-larger volumes coming in at a higher velocity than normal.
+In production environments, data are subject to change. Enterprises sit on massive, dynamic datasets — documents, codebases, meetings, etc. Most data infrastructures are batch-oriented and blind to change, forcing engineers to rebuild from scratch every time data or logic shifts.  As AI systems evolve from simple chat-based interactions to complex, autonomous agents, one fundamental challenge remains unsolved: keeping their context accurate and up to date in a world that never stops changing. 
 
-For scenarios like this, incremental processing is an efficient technique that processes only new
-or changed data (deltas) since the last update, rather than reprocessing entire large datasets. This
-tends to reduce computation while lowering costs for near real-time
-analytics. CocoIndex is ideal for managing constantly evolving data sources, handling small batches
-of updates to keep data fresh with less overhead than full batch workloads.
+Consider this scenario: You have a user-facing application where users enter their recipes (along with images of the food/drink item that they prepared), and you want to persist the data to a multimodal storage engine. Users edit the data over time, your requirement for building the system shifts over time, e.g., new columns get added. 
 
-[CocoIndex](https://cocoindex.io/docs/) uses a declarative approach to
-defining indexing "flows",involving source data and
-transformed data (either as an intermediate result or the final result to be put into targets).
-All data within the indexing flow has a schema determined at flow definition time,
-which aligns very well with LanceDB's strictly typed schema-driven storage mechanism.
+For scenarios like this, incremental processing is an efficient technique that processes only new or changed data (deltas) since the last update, rather than reprocessing an entire large source. This tends to reduce unnecessary computation, and also keep the context for AI fresh. 
+
+[CocoIndex](https://github.com/cocoindex-io/cocoindex)  is ideal for managing constantly evolving data sources and logic changes, handling small batches of updates to keep data fresh in production with less overhead than full batch workloads.
+
 
 ## Dataset
 
