@@ -180,7 +180,7 @@ def recipe_ingest_flow(
 
     recipe_embeddings.export(
         "recipes",
-        coco_lancedb.LanceDB(db_uri=LANCEDB_URI, table_name=TABLE_NAME),
+        coco_lancedb.LanceDB(db_uri=LANCEDB_URI, table_name=TABLE_NAME, num_transactions_before_optimize=50),
         primary_key_fields=["id"],
     )
 
